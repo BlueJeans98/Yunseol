@@ -61,12 +61,15 @@ const Room = (props) => {
                         peerID: userID,
                         peer,
                     })
-                    peers.push(peer);
+                    peers.push({
+                        peerID : userID,
+                        peer
+                    });
                 })
                 setPeers(peers);
             })
 
-            socketRef.current.on("user joined", payload => {
+            socketRef.current.on("user joined", (payload) => {
                 const peer = addPeer(payload.signal, payload.callerID, stream);
                 myPeer.current = peer;
                 peersRef.current.push({
@@ -74,13 +77,30 @@ const Room = (props) => {
                     peer,
                 })
 
-                setPeers(users => [...users, peer]);
+                // const peerObj = {
+                //     peer,
+                //     peerID : payload.callerID
+                // }
+                
+                // setPeers(users => [...users, peerObj]);
+                setPeers([...peersRef.current]);
             });
 
             socketRef.current.on("receiving returned signal", payload => {
                 const item = peersRef.current.find(p => p.peerID === payload.id);
                 item.peer.signal(payload.signal);
             });
+
+            socketRef.current.on("user left", id => {
+                const peerObj = peersRef.current.find(p=>p.peerID === id);
+                if(peerObj) {
+                    peerObj.peer.destroy();
+                }
+                const peers = peersRef.current.filter(p => p.peerID  !== id);
+                peersRef.current = peers;
+                console.log(peers);
+                setPeers(peers);
+            } )
         })
     }, []);
 
@@ -119,13 +139,13 @@ const Room = (props) => {
         .then(screenStream=>{
             peers.map(peer => {
                 myPeer.current = peer;
-                myPeer.current.replaceTrack(stream.getVideoTracks()[0],screenStream.getVideoTracks()[0],stream);
+                myPeer.current.peer.replaceTrack(stream.getVideoTracks()[0],screenStream.getVideoTracks()[0],stream);
             })
             userVideo.current.srcObject=screenStream;
           screenStream.getTracks()[0].onended = () =>{
             peers.map(peer => {
                 myPeer.current = peer;
-                myPeer.current.replaceTrack(screenStream.getVideoTracks()[0],stream.getVideoTracks()[0],stream);
+                myPeer.current.peer.replaceTrack(screenStream.getVideoTracks()[0],stream.getVideoTracks()[0],stream);
             })
             userVideo.current.srcObject=stream;
           }
@@ -134,11 +154,14 @@ const Room = (props) => {
 
     return (
         <Container>
-            <StyledVideo muted ref={userVideo} autoPlay playsInline />
-            <button onClick={shareScreen}>Share screen</button>
-            {peers.map((peer, index) => {
+            <div>
+                <StyledVideo muted ref={userVideo} autoPlay playsInline />
+                <button onClick={shareScreen}>Share screen</button>
+            </div>
+            {
+                peers.map((peer) => {
                 return (
-                    <Video key={index} peer={peer} />
+                    <Video key={peer.peerID} peer={peer.peer} />
                 );
             })}
         </Container>
