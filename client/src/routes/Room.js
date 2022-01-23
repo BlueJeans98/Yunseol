@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import Peer from "simple-peer";
 import styled from "styled-components";
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 
 const Container = styled.div`
     padding: 20px;
@@ -39,6 +41,8 @@ const videoConstraints = {
 
 const Room = (props) => {
     const [peers, setPeers] = useState([]);
+    const [camText, setcamText] = useState();
+    const [muteText, setmuteText] = useState();
     const [stream, setStream] = useState();
     const socketRef = useRef();
     const userVideo = useRef();
@@ -47,6 +51,8 @@ const Room = (props) => {
     const myPeer = useRef();
 
     useEffect(() => {
+        setcamText("카메라 끄기");
+        setmuteText("음소거")
         socketRef.current = io.connect("/");
         navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true }).then(stream => {
             setStream(stream);
@@ -152,14 +158,41 @@ const Room = (props) => {
         })
       }
 
+      function HideCam(){
+          const videoTrack = stream.getTracks().find(track => track.kind === 'video');
+          if(videoTrack.enabled) {
+              videoTrack.enabled = false;
+              setcamText("카메라 끄기");
+          }
+          else{
+            videoTrack.enabled = true;
+            setcamText("카메라 켜기");
+          }
+      }
+
+      function MuteAudio(){
+        const audioTrack = stream.getTracks().find(track => track.kind === 'audio');
+        if(audioTrack.enabled) {
+            audioTrack.enabled = false;
+            setmuteText("음소거");
+        }
+        else{
+            audioTrack.enabled = true;
+          setmuteText("음소거 해제");
+        }
+    }
+
     return (
         <Container>
-            <div>
-                <StyledVideo muted ref={userVideo} autoPlay playsInline />
-                <button onClick={shareScreen}>Share screen</button>
-            </div>
-            {
-                peers.map((peer) => {
+                <Col>
+                    <StyledVideo muted ref={userVideo} autoPlay playsInline />
+                    <Row>
+                        <button onClick={shareScreen}>Share screen</button>
+                        <button onClick={HideCam}>{camText}</button>
+                        <button onClick={MuteAudio}>{muteText}</button>
+                    </Row>
+                </Col>
+            {peers.map((peer) => {
                 return (
                     <Video key={peer.peerID} peer={peer.peer} />
                 );
