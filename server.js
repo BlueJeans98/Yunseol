@@ -6,25 +6,43 @@ const server = http.createServer(app);
 const socket = require("socket.io");
 const io = socket(server);
 
-const users = {};
+const rooms = {};
 
 const socketToRoom = {};
+let users = [];
+let cur_rooms = [];
 
 io.on('connection', socket => {
+
+    socket.on("join server", (username) => {
+        const user = {
+            username,
+            id : socket.id,
+        };
+        users.push(user);
+        io.sockets.emit("list Rooms", cur_rooms);
+        console.log(cur_rooms);
+        console.log(users);
+    });
+
+    socket.on("new Room", (roomid) => {
+        cur_rooms.push(roomid);
+        io.sockets.emit("list Rooms", cur_rooms);
+    });
     
     socket.on("join room", roomID => {
-        if (users[roomID]) {
-            const length = users[roomID].length;
+        if (rooms[roomID]) {
+            const length = rooms[roomID].length;
             if (length === 3) {
                 socket.emit("room full");
                 return;
             }
-            users[roomID].push(socket.id);
+            rooms[roomID].push(socket.id);
         } else {
-            users[roomID] = [socket.id];
+            rooms[roomID] = [socket.id];
         }
         socketToRoom[socket.id] = roomID;
-        const usersInThisRoom = users[roomID].filter(id => id !== socket.id);
+        const usersInThisRoom = rooms[roomID].filter(id => id !== socket.id);
 
         socket.emit("all users", usersInThisRoom);
     });
@@ -39,10 +57,10 @@ io.on('connection', socket => {
 
     socket.on('disconnect', () => {
         const roomID = socketToRoom[socket.id];
-        let room = users[roomID];
+        let room = rooms[roomID];
         if (room) {
             room = room.filter(id => id !== socket.id);
-            users[roomID] = room;
+            rooms[roomID] = room;
         }
         socket.broadcast.emit("user left", socket.id);
     });
