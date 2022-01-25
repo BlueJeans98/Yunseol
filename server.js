@@ -55,6 +55,15 @@ io.on('connection', socket => {
         io.to(payload.callerID).emit('receiving returned signal', { signal: payload.signal, id: socket.id });
     });
 
+    socket.on("user left room", roomID => {
+        let room = rooms[roomID];
+        if (room) {
+            room = room.filter(id => id !== socket.id);
+            rooms[roomID] = room;
+        }
+        socket.broadcast.emit("user left", socket.id);
+    })
+
     socket.on('disconnect', () => {
         const roomID = socketToRoom[socket.id];
         let room = rooms[roomID];
@@ -63,6 +72,8 @@ io.on('connection', socket => {
             rooms[roomID] = room;
         }
         socket.broadcast.emit("user left", socket.id);
+        users = users.filter(user => user.id !== socket.id);
+        
     });
 
 });
