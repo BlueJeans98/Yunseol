@@ -36,8 +36,7 @@ const CreateRoom = (props) => {
 
     function create() {
         const id = uuid();
-        props.history.push(`/room/${id}`);
-        console.log(props);
+        props.history.push({pathname: `/room/${id}`, state:{nickname : '방장이'}});
         socketRef.current.emit("new Room",id);
     }
 

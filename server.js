@@ -30,35 +30,36 @@ io.on('connection', socket => {
         io.sockets.emit("list Rooms", cur_rooms);
     });
     
-    socket.on("join room", roomID => {
+    socket.on("join room", (roomID, nickname) => {
+        const info = {id: socket.id, nickname: nickname};
         if (rooms[roomID]) {
             const length = rooms[roomID].length;
             if (length === 3) {
                 socket.emit("room full");
                 return;
             }
-            rooms[roomID].push(socket.id);
+            rooms[roomID].push(info);
         } else {
-            rooms[roomID] = [socket.id];
+            rooms[roomID] = [info];
         }
         socketToRoom[socket.id] = roomID;
-        const usersInThisRoom = rooms[roomID].filter(id => id !== socket.id);
+        const usersInThisRoom = rooms[roomID].filter(info => info.id !== socket.id);
 
         socket.emit("all users", usersInThisRoom);
     });
 
     socket.on("sending signal", payload => {
-        io.to(payload.userToSignal).emit('user joined', { signal: payload.signal, callerID: payload.callerID });
+        io.to(payload.userToSignal.id).emit('user joined', { signal: payload.signal, callerInfo: payload.callerInfo });
     });
 
     socket.on("returning signal", payload => {
-        io.to(payload.callerID).emit('receiving returned signal', { signal: payload.signal, id: socket.id });
+        io.to(payload.callerInfo.id).emit('receiving returned signal', { signal: payload.signal, id: socket.id });
     });
 
     socket.on("user left room", roomID => {
         let room = rooms[roomID];
         if (room) {
-            room = room.filter(id => id !== socket.id);
+            room = room.filter(info => info.id !== socket.id);
             rooms[roomID] = room;
         }
         socket.broadcast.emit("user left", socket.id);
@@ -68,7 +69,7 @@ io.on('connection', socket => {
         const roomID = socketToRoom[socket.id];
         let room = rooms[roomID];
         if (room) {
-            room = room.filter(id => id !== socket.id);
+            room = room.filter(info => info.id !== socket.id);
             rooms[roomID] = room;
         }
         socket.broadcast.emit("user left", socket.id);

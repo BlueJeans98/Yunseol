@@ -56,7 +56,6 @@ const Room = (props) => {
     const peersRef = useRef([]);
     const roomID = props.match.params.roomID;
     const myPeer = useRef();
-
     const mynickname = props.location.state.nickname;
 
     useEffect(() => {
@@ -66,20 +65,22 @@ const Room = (props) => {
         navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true }).then(stream => {
             setStream(stream);
             userVideo.current.srcObject = stream;
-            socketRef.current.emit("join room", roomID);
+            socketRef.current.emit("join room", roomID, mynickname);
 
 
             socketRef.current.on("all users", users => {
                 const peers = [];
-                users.forEach(userID => {
-                    const peer = createPeer(userID, socketRef.current.id, stream);
+                const info = {id: socketRef.current.id, nickname: mynickname};
+                users.forEach(user => {
+                    const peer = createPeer(user, info, stream);
                     myPeer.current = peer;
                     peersRef.current.push({
-                        peerID: userID,
+                        peerID: user.id,
                         peer,
                     })
                     peers.push({
-                        peerID: userID,
+                        peerID: user.id,
+                        peerNick : user.nickname,
                         peer
                     });
                 })
@@ -87,10 +88,11 @@ const Room = (props) => {
             })
 
             socketRef.current.on("user joined", (payload) => {
-                const peer = addPeer(payload.signal, payload.callerID, stream);
+                const peer = addPeer(payload.signal, payload.callerInfo, stream);
                 myPeer.current = peer;
                 peersRef.current.push({
-                    peerID: payload.callerID,
+                    peerID: payload.callerInfo.id,
+                    peerNick: payload.callerInfo.nickname,
                     peer,
                 })
 
@@ -102,7 +104,7 @@ const Room = (props) => {
                 item.peer.signal(payload.signal);
             });
 
-            socketRef.current.on("user left", id => {
+            socketRef.current.on("user left", id=> {
                 const peerObj = peersRef.current.find(p => p.peerID === id);
                 if (peerObj) {
                     peerObj.peer.destroy();
@@ -114,7 +116,7 @@ const Room = (props) => {
         })
     }, []);
 
-    function createPeer(userToSignal, callerID, stream) {
+    function createPeer(userToSignal, callerInfo, stream) {
         const peer = new Peer({
             initiator: true,
             trickle: false,
@@ -122,13 +124,13 @@ const Room = (props) => {
         });
 
         peer.on("signal", signal => {
-            socketRef.current.emit("sending signal", { userToSignal, callerID, signal })
+            socketRef.current.emit("sending signal", { userToSignal, callerInfo, signal })
         })
 
         return peer;
     }
 
-    function addPeer(incomingSignal, callerID, stream) {
+    function addPeer(incomingSignal, callerInfo, stream) {
         const peer = new Peer({
             initiator: false,
             trickle: false,
@@ -136,7 +138,7 @@ const Room = (props) => {
         })
 
         peer.on("signal", signal => {
-            socketRef.current.emit("returning signal", { signal, callerID })
+            socketRef.current.emit("returning signal", { signal, callerInfo })
         })
 
         peer.signal(incomingSignal);
@@ -603,7 +605,10 @@ const Room = (props) => {
                         </Col> */}
                         {peers.map((peer) => {
                             return (
-                                <Video key={peer.peerID} peer={peer.peer} />
+                                <div>
+                                    <text>{peer.peerNick}</text>
+                                    <Video key={peer.peerID} peer={peer.peer} />
+                                </div>
                             );
                         })}
                     </Container>
