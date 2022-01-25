@@ -10,6 +10,7 @@ import Draggable from 'react-draggable';
 // import Modal from './modal';
 import cn from "classnames";
 import "../navbar.css";
+import Dropdown from '../Dropdown';
 
 
 const Container = styled.div`
@@ -22,8 +23,8 @@ const Container = styled.div`
 `;
 
 const StyledVideo = styled.video`
-    height: 40%;
-    width: 50%;
+    height: 85%;
+    width: 100%;
 `;
 
 const Video = (props) => {
@@ -70,7 +71,7 @@ const Room = (props) => {
 
             socketRef.current.on("all users", users => {
                 const peers = [];
-                const info = {id: socketRef.current.id, nickname: mynickname};
+                const info = { id: socketRef.current.id, nickname: mynickname };
                 users.forEach(user => {
                     const peer = createPeer(user, info, stream);
                     myPeer.current = peer;
@@ -80,7 +81,7 @@ const Room = (props) => {
                     })
                     peers.push({
                         peerID: user.id,
-                        peerNick : user.nickname,
+                        peerNick: user.nickname,
                         peer
                     });
                 })
@@ -104,7 +105,7 @@ const Room = (props) => {
                 item.peer.signal(payload.signal);
             });
 
-            socketRef.current.on("user left", id=> {
+            socketRef.current.on("user left", id => {
                 const peerObj = peersRef.current.find(p => p.peerID === id);
                 if (peerObj) {
                     peerObj.peer.destroy();
@@ -188,7 +189,7 @@ const Room = (props) => {
         }
     }
 
-    function leaveRoom(){
+    function leaveRoom() {
         socketRef.current.emit("user left room", roomID);
         props.history.push(`/`);
     }
@@ -203,13 +204,88 @@ const Room = (props) => {
 
     const [urllist, setUrlList] = useState(["https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com"])
 
-    const userurlist = [[1, '박정웅', '문서1', 'https://docs.google.com/document/d/1t3w62lqmb-kh3KZRYRrdc9_mNmeDMWGEI7gr30VYeZ0/edit'], [2, '김수민', '문서2', 'https://docs.google.com/document/d/1t3w62lqmb-kh3KZRYRrdc9_mNmeDMWGEI7gr30VYeZ0/edit']]
-    const userchatist = [[1, '박정웅', 'https://center-pf.kakao.com/_BxhMfb/chats/4833125796910175'], [2, '김수민', 'https://center-pf.kakao.com/_BxhMfb/chats/4833347190361203']]
+    const [userurlist, setuserurllist] = useState([['문서1', 'https://docs.google.com/document/d/1t3w62lqmb-kh3KZRYRrdc9_mNmeDMWGEI7gr30VYeZ0/edit'], ['문서2', 'https://docs.google.com/document/d/1t3w62lqmb-kh3KZRYRrdc9_mNmeDMWGEI7gr30VYeZ0/edit']]);
+    const [userchatist, setuserchatist] = useState([['박정웅', 'https://center-pf.kakao.com/_BxhMfb/chats/4833125796910175'], ['김수민', 'https://center-pf.kakao.com/_BxhMfb/chats/4833347190361203']])
+    const [userExtList, setuserExtList] = useState([])
 
+    const [peoplelist, setpeoplelist] = useState(false);
     const [showNavMobile, setshowNavMobile] = useState(false);
     const [sharedDoc, setsharedDoc] = useState(false);
     const [chatroom, setchatroom] = useState(false);
+    const [extra, setextra] = useState(false);
     const [addLink, setaddLink] = useState(false);
+
+    var title = '';
+    var url = '';
+    const [camera, setCamera] = useState(false);
+
+    const [addMenuCategory, setaddMenuCategory] = useState(
+        {
+            fruit: [
+                {
+                    id: 0,
+                    title: "공유 문서함",
+                    selected: false,
+                    key: "fruit"
+                },
+                {
+                    id: 1,
+                    title: "채팅방",
+                    selected: false,
+                    key: "fruit"
+                },
+                {
+                    id: 2,
+                    title: "기타",
+                    selected: false,
+                    key: "fruit"
+                }
+            ]
+        }
+    );
+
+    const [addMenu, setaddMenu] = useState(-1);
+
+    const addItem = () => {
+        if (addMenu == 0) {
+            var templist = [...userurlist]
+            templist.push([title, url]);
+            setuserurllist(templist)
+        } else if (addMenu == 1) {
+            var templist = [...userchatist]
+            templist.push([title, url])
+            setuserchatist(templist)
+        } else if (addMenu == 2) {
+            var templist = [...userExtList]
+            templist.push([title, url])
+            setuserExtList(templist)
+        }
+        setaddLink(!addLink)
+    }
+
+    const onContentChangeTitle = (e) => {
+        title = e.currentTarget.value;
+    }
+
+    const onContentChangeUrl = (e) => {
+        url = e.currentTarget.value;
+    };
+
+    const addbuttonclick = () => {
+        console.log(addMenu);
+        setaddLink(!addLink);
+        setaddMenu(-1)
+    }
+
+    const resetThenSet = (id, key) => {
+        let temp = JSON.parse(JSON.stringify(addMenuCategory.fruit));
+        temp.forEach((item) => (item.selected = false));
+        temp[id].selected = true;
+        setaddMenuCategory({
+            fruit: temp
+        });
+        setaddMenu(id);
+    };
 
 
     // 업데이트 되는 값을 set 해줌
@@ -342,6 +418,20 @@ const Room = (props) => {
     //   )
     // })
 
+    const peoplelistelement = peers.map(peer => {
+        return (
+            <li
+                className={cn({
+                    ["open-item"]: peoplelist
+                })}
+            >
+                <div class="sidebarData" draggable onDragEnd={(e, data) => temp(e, data, url[3])}>
+                    {peer.peerNick}
+                </div>
+            </li>
+        )
+    })
+
     const urlelement = userurlist.map(url => {
         return (
             <li
@@ -349,8 +439,8 @@ const Room = (props) => {
                     ["open-item"]: sharedDoc
                 })}
             >
-                <div class="sidebarData" draggable onDragEnd={(e, data) => temp(e, data, url[3])}>
-                    {url[2]}
+                <div class="sidebarData" draggable onDragEnd={(e, data) => temp(e, data, url[1])}>
+                    {url[0]}
                 </div>
             </li>
         )
@@ -370,11 +460,25 @@ const Room = (props) => {
         return (
             <li
                 className={cn({
-                    ["open-item"]: sharedDoc
+                    ["open-item"]: chatroom
                 })}
             >
-                <div class="sidebarData" draggable onDragEnd={(e, data) => temp(e, data, url[2])}>
-                    {url[1]}
+                <div class="sidebarData" draggable onDragEnd={(e, data) => temp(e, data, url[1])}>
+                    {url[0]}
+                </div>
+            </li>
+        )
+    })
+
+    const userExtListelement = userExtList.map(url => {
+        return (
+            <li
+                className={cn({
+                    ["open-item"]: extra
+                })}
+            >
+                <div class="sidebarData" draggable onDragEnd={(e, data) => temp(e, data, url[1])}>
+                    {url[0]}
                 </div>
             </li>
         )
@@ -388,13 +492,19 @@ const Room = (props) => {
         setchatroom(!chatroom)
     }
 
+    const gotoExtraRoom = () => {
+        setextra(!extra)
+    }
+
     const threeLineButton = () => {
         if (showNavMobile == false) {
             setshowNavMobile(true);
         } else {
+            setpeoplelist(false);
             setshowNavMobile(false);
             setsharedDoc(false);
             setchatroom(false);
+            setextra(false);
         }
     }
 
@@ -402,10 +512,17 @@ const Room = (props) => {
         console.log("click")
     }
 
+    function Section1() {
+        return (
+            <>
+                <iframe width={leftwidth} height="1000px" src={urllist[0]} title='test' name="test" id="test" scrolling="yes" align="left">이 브라우저는 iframe을 지원하지 않습니다</iframe>
+            </>
+        )
+    }
+
     return (
         <div className="App">
             <nav>
-            <button onClick={leaveRoom}>방 나가기</button>
                 <div className="wrap">
                     <div className="logo"><a href="http://localhost:3000/">The Nav</a></div>
                     {/* <div className="plus" onClick={ click() }>+</div> */}
@@ -423,6 +540,8 @@ const Room = (props) => {
                     </div>
 
 
+                    {/* 사이드바 시작화면 */}
+
                     <ul
                         className={cn("nav-links", {
                             ["open"]: showNavMobile
@@ -433,31 +552,81 @@ const Room = (props) => {
                                 ["open-item"]: showNavMobile
                             })}
                         >
-                            <a href="#">Home</a>
+                            <div class="sidebarData" onClick={() => setpeoplelist(!peoplelist)}>
+                                참가자
+                            </div>
                         </li>
                         <li
                             className={cn({
                                 ["open-item"]: showNavMobile
                             })}
                         >
-                            <a class="nav-link" href="#" onClick={() => gotoSharedDoc()}>공유 문서함</a>
+                            <div class="sidebarData" onClick={() => gotoSharedDoc()}>
+                                공유 문서함
+                            </div>
+
                         </li>
                         <li
                             className={cn({
                                 ["open-item"]: showNavMobile
                             })}
                         >
-                            <a class="nav-link" href="#" onClick={() => gotoChatRoom()}>채팅</a>
+                            <div class="sidebarData" onClick={() => gotoChatRoom()}>
+                                채팅
+                            </div>
                         </li>
                         <li
                             className={cn({
                                 ["open-item"]: showNavMobile
                             })}
                         >
-                            <a href="#">About</a>
+                            <div class="sidebarData" onClick={() => gotoExtraRoom()}>
+                                기타
+                            </div>
+                        </li>
+                        <li
+                            className={cn({
+                                ["open-item"]: showNavMobile
+                            })}
+                        >
+                            <div class="sidebarData" onClick={() => leaveRoom()}>
+                                방 나가기
+                            </div>
                         </li>
                     </ul>
 
+
+                    {/* 참가자 */}
+
+                    <ul
+                        className={cn("nav-links2", {
+                            ["open"]: peoplelist
+                        })}
+                    >
+                        <li
+                            className={cn({
+                                ["open-item"]: peoplelist
+                            })}
+                        >
+                            <div class="sidebarData">
+                                참가자
+                            </div>
+                        </li>
+
+                        {peoplelistelement}
+
+                        <li
+                            className={cn({
+                                ["open-item"]: peoplelist
+                            })}
+                        >
+                            <div class="sidebarData" onClick={() => setpeoplelist(!peoplelist)}>
+                                나가기
+                            </div>
+                        </li>
+                    </ul>
+
+                    {/* 공유문서함 */}
 
                     <ul
                         className={cn("nav-links2", {
@@ -479,9 +648,15 @@ const Room = (props) => {
                                 ["open-item"]: sharedDoc
                             })}
                         >
-                            <a href="#" onClick={() => setsharedDoc(!sharedDoc)}>나가기</a>
+                            <div class="sidebarData" onClick={() => setsharedDoc(!sharedDoc)}>
+                                나가기
+                            </div>
                         </li>
                     </ul>
+
+
+
+                    {/* 채팅함 */}
 
 
                     <ul
@@ -504,9 +679,43 @@ const Room = (props) => {
                                 ["open-item"]: chatroom
                             })}
                         >
-                            <a href="#" onClick={() => setchatroom(!chatroom)}>나가기</a>
+                            <div class="sidebarData" onClick={() => setchatroom(!chatroom)}>
+                                나가기
+                            </div>
+
                         </li>
                     </ul>
+
+                    {/* 기타 */}
+
+
+                    <ul
+                        className={cn("nav-links2", {
+                            ["open"]: extra
+                        })}
+                    >
+                        <li
+                            className={cn({
+                                ["open-item"]: extra
+                            })}
+                        >
+                            <a href="#">기타</a>
+                        </li>
+
+                        {userExtListelement}
+
+                        <li
+                            className={cn({
+                                ["open-item"]: extra
+                            })}
+                        >
+                            <div class="sidebarData" onClick={() => setextra(!extra)}>
+                                나가기
+                            </div>
+                        </li>
+                    </ul>
+
+                    {/* 아이템 추가하기 */}
 
                     <ul
                         className={cn("nav-links3", {
@@ -518,7 +727,58 @@ const Room = (props) => {
                                 ["open-item"]: addLink
                             })}
                         >
-                            <a href="#">추가</a>
+
+                            <div class="sidebarData" onClick={() => setextra(!extra)}>
+                                추가
+                            </div>
+                        </li>
+
+                        {/* <li
+              className={cn({
+                ["open-item"]: addLink
+              })}
+            >
+
+
+            <Dropdown
+            title="카테고리"
+            list={addMenuCategory.fruit}
+            resetThenSet={resetThenSet}
+          />
+            </li> */}
+
+
+                        <li
+                            className={cn({
+                                ["open-item"]: addLink
+                            })}
+                        >
+                            <Dropdown
+                                title="카테고리"
+                                list={addMenuCategory.fruit}
+                                resetThenSet={resetThenSet}
+                            />
+                            <div className='dd-header2'>
+                                <textarea name="mb_self" rows="5" cols="35" onChange={onContentChangeTitle}></textarea>
+                            </div>
+                            <div class="sidebarData" onClick={() => setaddLink(!addLink)}>
+                                제목
+                            </div>
+                            <div className='dd-header2'>
+                                <textarea name="mb_self" rows="5" cols="35" onChange={onContentChangeUrl}></textarea>
+                            </div>
+                            <div class="sidebarData" onClick={() => setaddLink(!addLink)}>
+                                링크
+                            </div>
+
+                        </li>
+
+                        <li
+                            className={cn({
+                                ["open-item"]: addLink
+                            })}
+                        >
+                            {/* <a href="#" onClick={() => }>저장하기</a> */}
                         </li>
 
 
@@ -528,10 +788,11 @@ const Room = (props) => {
                                 ["open-item"]: addLink
                             })}
                         >
-                            <a href="#" onClick={() => setaddLink(!addLink)}>나가기</a>
+                            <div class="sidebarData" onClick={() => addItem()}>
+                                저장하기
+                            </div>
                         </li>
                     </ul>
-
 
 
 
@@ -552,7 +813,19 @@ const Room = (props) => {
 
             <div>
                 <div className='area1'>
-                    {/* <iframe width={leftwidth} height="1000px" src={urllist[0]} title='test' name="test" id="test" scrolling="yes" align="left">이 브라우저는 iframe을 지원하지 않습니다</iframe> */}
+                    {/* <iframe width={leftwidth} height="1000px" src={urllist[0]} title='test' name="test" id="test" scrolling="yes" align="left" style={{visibility: 'visible'}}>이 브라우저는 iframe을 지원하지 않습니다</iframe> */}
+                    <Container style={{ width: leftwidth, height: "1000px", position: 'absolute' }}>
+                        <Col>
+                            <StyledVideo muted ref={userVideo} autoPlay playsInline />
+                            <Row>
+                                <button onClick={shareScreen}>Share screen</button>
+                                <button onClick={HideCam}>{camText}</button>
+                                <button onClick={MuteAudio}>{muteText}</button>
+                            </Row>
+                        </Col>
+                    </Container>
+
+                    {/* <Section1/> */}
                 </div>
                 <Draggable bounds={{ right: (vlConstraint[0] - 856) }} axis='x' onStop={(e, data) => trackPos1(e, data)} onDrag={(e, data) => handleGrab1(data)} >
                     <div className="vl" style={{ marginLeft: 856, opacity: opacityValue[0] ? 1 : 0.5, cursor: 'e-resize' }} >
@@ -565,36 +838,7 @@ const Room = (props) => {
                 <div className="vl4" style={{ marginLeft: vlConstraint2 - 5, height: heightValue, opacity: opacityValue[2] ? 1 : 0.5, cursor: 'e-resize' }} >
                     {/* <iframe width={vlConstraint[1][0] - vlConstraint2} height={heightValue} src={urllist[1]} title='test' name="test" id="test" scrolling="yes" align="left">이 브라우저는 iframe을 지원하지 않습니다</iframe> */}
                     {/* <img id='img1' width={ vlConstraint[1][0]-vlConstraint2 +5 } height={ heightValue } src = 'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQ7IB6Ai52BgQezn9Uid6XYFst6BARdp6mev-94mVHucrbD5FfV' alt=''></img> */}
-
-
-
-                </div>
-                <div className="vl4" style={{ marginLeft: vlConstraint2 - 5, marginTop: heightValue + 5, height: (1000 - heightValue), opacity: opacityValue[2] ? 1 : 0.5, cursor: 'e-resize' }} >
-                    {/* <iframe width={vlConstraint[1][1] - vlConstraint2} height={(1000 - heightValue - 5)} src={urllist[3]} title='test' name="test" id="test" scrolling="yes" align="left">이 브라우저는 iframe을 지원하지 않습니다</iframe> */}
-                    {/* <img id='img1' width={ vlConstraint[1][1]-vlConstraint2 +5 } height={ (1000-heightValue) } src = 'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQ7IB6Ai52BgQezn9Uid6XYFst6BARdp6mev-94mVHucrbD5FfV' alt=''></img> */}
-                    <div width={vlConstraint[1][1] - vlConstraint2} height={(1000 - heightValue - 5)}>
-                    <Container>
-                        <Col>
-                            <StyledVideo muted ref={userVideo} autoPlay playsInline />
-                            <Row>
-                                <button onClick={shareScreen}>화면 공유</button>
-                                <button onClick={HideCam}>{camText}</button>
-                                <button onClick={MuteAudio}>{muteText}</button>
-                            </Row>
-                        </Col>
-                        {/* {peers.map((peer) => {
-                            return (
-                                <Video key={peer.peerID} peer={peer.peer} />
-                            );
-                        })} */}
-                    </Container>
-                    </div>
-                </div>
-                <Draggable bounds={{ left: -(1400 - vlConstraint2) }} axis='x' onStop={(e, data) => trackPos3(e, data)} onDrag={(e, data) => handleGrab3(data)} >
-                    <div className="vl2" style={{ marginLeft: 1400, height: heightValue, opacity: opacityValue[2] ? 1 : 0.5, cursor: 'e-resize' }} >
-                        {/* <iframe width={1900 - vlConstraint[1][0]} height={heightValue} src={urllist[2]} title='test' name="test" id="test" scrolling="yes" align="left">이 브라우저는 iframe을 지원하지 않습니다</iframe> */}
-                        {/* <img id='img1'  width={ 1900-vlConstraint[1][0] } height={ heightValue } src = 'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQ7IB6Ai52BgQezn9Uid6XYFst6BARdp6mev-94mVHucrbD5FfV' alt=''></img> */}
-                        <Container>
+                    <Container style={{ width: (vlConstraint[1][0] - vlConstraint2), height: heightValue }}>
                         {/* <Col>
                             <StyledVideo muted ref={userVideo} autoPlay playsInline />
                             <Row>
@@ -612,8 +856,34 @@ const Room = (props) => {
                             );
                         })}
                     </Container>
-                    
-                    
+
+
+                </div>
+                <div className="vl4" style={{ marginLeft: vlConstraint2 - 5, marginTop: heightValue + 5, height: (1000 - heightValue), opacity: opacityValue[2] ? 1 : 0.5, cursor: 'e-resize' }} >
+                    {/* <iframe width={vlConstraint[1][1] - vlConstraint2 + 5} height={(1000 - heightValue - 5)} src={urllist[3]} title='test' name="test" id="test" scrolling="yes" align="left">이 브라우저는 iframe을 지원하지 않습니다</iframe> */}
+                    {/* <img id='img1' width={ vlConstraint[1][1]-vlConstraint2 +5 } height={ (1000-heightValue) } src = 'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQ7IB6Ai52BgQezn9Uid6XYFst6BARdp6mev-94mVHucrbD5FfV' alt=''></img> */}
+
+                    {/* <Container style={{ width: (vlConstraint[1][1] - vlConstraint2 + 5), height: (1000 - heightValue - 5) }}>
+                        <Col>
+                    <StyledVideo muted ref={userVideo} autoPlay playsInline />
+                    <Row>
+                        <button onClick={shareScreen}>Share screen</button>
+                        <button onClick={HideCam}>{camText}</button>
+                        <button onClick={MuteAudio}>{muteText}</button>
+                    </Row>
+                </Col>
+                        {peers.map((peer) => {
+                            return (
+                                <Video key={peer.peerID} peer={peer.peer} />
+                            );
+                        })}
+
+                    </Container> */}
+                </div>
+                <Draggable bounds={{ left: -(1400 - vlConstraint2) }} axis='x' onStop={(e, data) => trackPos3(e, data)} onDrag={(e, data) => handleGrab3(data)} >
+                    <div className="vl2" style={{ marginLeft: 1400, height: heightValue, opacity: opacityValue[2] ? 1 : 0.5, cursor: 'e-resize' }} >
+                        {/* <iframe width={1900 - vlConstraint[1][0]} height={heightValue} src={urllist[2]} title='test' name="test" id="test" scrolling="yes" align="left">이 브라우저는 iframe을 지원하지 않습니다</iframe> */}
+                        {/* <img id='img1'  width={ 1900-vlConstraint[1][0] } height={ heightValue } src = 'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQ7IB6Ai52BgQezn9Uid6XYFst6BARdp6mev-94mVHucrbD5FfV' alt=''></img> */}
                     </div>
                 </Draggable>
                 <Draggable bounds={{ left: -(1405 - vlConstraint2) }} axis='x' onStop={(e, data) => trackPos4(e, data)} onDrag={(e, data) => handleGrab4(e, data)} >
@@ -647,7 +917,6 @@ const Room = (props) => {
         // </Container>
     );
 };
-
 
 
 
