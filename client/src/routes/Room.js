@@ -57,6 +57,8 @@ const Room = (props) => {
     const roomID = props.match.params.roomID;
     const myPeer = useRef();
 
+    const mynickname = props.location.state.nickname;
+
     useEffect(() => {
         setcamText("카메라 끄기");
         setmuteText("음소거")
