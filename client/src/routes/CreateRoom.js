@@ -56,7 +56,10 @@ const CreateRoom = (props) => {
 
     return (
         <div stlye={{}}>
-            <button onClick={create}>Create room</button>
+            <Button variant="outlined" 
+            color= "default" onClick={create}>
+                Create room
+            </Button>
             {rooms.map((room) => {
                 return (
                     <Button variant="outlined" 

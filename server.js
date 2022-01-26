@@ -77,6 +77,11 @@ io.on('connection', socket => {
         
     });
 
+    socket.on('file change', payload => {
+        socket.broadcast.emit("file changed",payload);
+        console.log(payload);
+    })
+
 });
 
 server.listen(process.env.PORT || 443, () => console.log('server is running on port 443'));

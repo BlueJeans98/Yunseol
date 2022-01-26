@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useStateWithCallbackLazy } from 'use-state-with-callback';
 import io from "socket.io-client";
 import Peer from "simple-peer";
 import styled from "styled-components";
@@ -114,6 +115,14 @@ const Room = (props) => {
                 peersRef.current = peers;
                 setPeers(peers);
             })
+
+            socketRef.current.on("file changed", payload => {
+                console.log("file_changed");
+                setuserurllist(payload.userurlist);
+                setuserchatist(payload.userchatist);
+                setuserExtList(payload.userExtList);
+                setaddLink(!addLink)
+            })
         })
     }, []);
 
@@ -202,11 +211,13 @@ const Room = (props) => {
     const [vlConstraint, setvlConstraint] = useState([1400, [1400, 1400]])
     const [vlConstraint2, setvlConstraint2] = useState(865)
 
-    const [urllist, setUrlList] = useState(["https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com", "https://youtube.com"])
+    const [urllist, setUrlList] = useState(["https://youtube.com", "https://www.naver.com/", "https://www.google.com/", "https://www.krafton.com/", "https://portal.kaist.ac.kr/"])
 
     const [userurlist, setuserurllist] = useState([['문서1', 'https://docs.google.com/document/d/1t3w62lqmb-kh3KZRYRrdc9_mNmeDMWGEI7gr30VYeZ0/edit'], ['문서2', 'https://docs.google.com/document/d/1t3w62lqmb-kh3KZRYRrdc9_mNmeDMWGEI7gr30VYeZ0/edit']]);
     const [userchatist, setuserchatist] = useState([['박정웅', 'https://center-pf.kakao.com/_BxhMfb/chats/4833125796910175'], ['김수민', 'https://center-pf.kakao.com/_BxhMfb/chats/4833347190361203']])
     const [userExtList, setuserExtList] = useState([])
+    const [peerCameraList, setpeerCameraList] = useState(['','','','','']);
+
 
     const [peoplelist, setpeoplelist] = useState(false);
     const [showNavMobile, setshowNavMobile] = useState(false);
@@ -214,6 +225,8 @@ const Room = (props) => {
     const [chatroom, setchatroom] = useState(false);
     const [extra, setextra] = useState(false);
     const [addLink, setaddLink] = useState(false);
+
+    const [show, setShow] = useState([['block','none'], ['block','none'], ['block','none'], ['block','none'], ['block','none']]);
 
     var title = '';
     var url = '';
@@ -246,11 +259,18 @@ const Room = (props) => {
 
     const [addMenu, setaddMenu] = useState(-1);
 
+    const selfCameraShow = (e, data) =>{
+        var templist = [...show]
+        templist[1][0] = 'none'
+        templist[1][1] = 'block'
+        setShow(templist)
+    }
+
     const addItem = () => {
         if (addMenu == 0) {
             var templist = [...userurlist]
             templist.push([title, url]);
-            setuserurllist(templist)
+            setuserurllist(templist);
         } else if (addMenu == 1) {
             var templist = [...userchatist]
             templist.push([title, url])
@@ -261,6 +281,11 @@ const Room = (props) => {
             setuserExtList(templist)
         }
         setaddLink(!addLink)
+    }
+
+    const handlefilechange = () => {
+        console.log(userExtList);
+        socketRef.current.emit("file change",{userurlist,userchatist,userExtList});
     }
 
     const onContentChangeTitle = (e) => {
@@ -301,7 +326,7 @@ const Room = (props) => {
 
     const handleGrab1 = (e, data) => {
         setleftwidth(856 + e.x)
-        setvlConstraint2(856 + e.x)
+        setvlConstraint2(865 + e.x)
         setOpacityValue([false, true, true, true])
     }
 
@@ -356,11 +381,32 @@ const Room = (props) => {
         setOpacityValue([true, true, true, false])
     }
 
+    const peerCamera = (e,data, peerNick) => {
+        var templist = [...show];
+        templist[checkarea(e.clientX, e.clientY) - 1][0] = 'none';
+        templist[checkarea(e.clientX, e.clientY) - 1][1] = 'block';
+
+        var templist2 = [...peerCameraList];
+        templist2[checkarea(e.clientX, e.clientY) - 1] = peerNick;
+
+        console.log('why?')
+        console.log(templist);
+        console.log(templist2);
+        setShow(templist);
+        setpeerCameraList(templist2);
+    }
+
     const temp = (e, data, url) => {
         var templist = [...urllist];
         templist[checkarea(e.clientX, e.clientY) - 1] = url;
+        
+        var templist2 = [...show];
+        templist2[checkarea(e.clientX, e.clientY) - 1][0] = 'block';
+        templist2[checkarea(e.clientX, e.clientY) - 1][1] = 'none';
         setUrlList(templist);
+        setShow(templist2);
     }
+
 
     const [modalOpen, setModalOpen] = useState(false);
     const [modalOpen2, setModalOpen2] = useState(false);
@@ -425,7 +471,7 @@ const Room = (props) => {
                     ["open-item"]: peoplelist
                 })}
             >
-                <div class="sidebarData" draggable onDragEnd={(e, data) => temp(e, data, url[3])}>
+                <div class="sidebarData" draggable onDragEnd={(e, data) => peerCamera(e, data, peer.peerNick)}>
                     {peer.peerNick}
                 </div>
             </li>
@@ -524,7 +570,7 @@ const Room = (props) => {
         <div className="App">
             <nav>
                 <div className="wrap">
-                    <div className="logo"><a href="http://localhost:3000/">The Nav</a></div>
+                    <div className="logo"><a href="http://localhost:3000/">Yoon Suel</a></div>
                     {/* <div className="plus" onClick={ click() }>+</div> */}
 
                     <div
@@ -613,6 +659,16 @@ const Room = (props) => {
                             </div>
                         </li>
 
+                        <li
+                            className={cn({
+                                ["open-item"]: peoplelist
+                            })}
+                        >
+                            <div class="sidebarData" draggable onDragEnd={(e, data) => selfCameraShow()}>
+                                자기자신
+                            </div>
+                        </li>
+
                         {peoplelistelement}
 
                         <li
@@ -638,10 +694,23 @@ const Room = (props) => {
                                 ["open-item"]: sharedDoc
                             })}
                         >
-                            <a href="#">공유 문서함</a>
+                            <div class="sidebarData">
+                                공유 문서함
+                            </div>
                         </li>
 
                         {urlelement}
+
+                        <li
+                            className={cn({
+                                ["open-item"]: chatroom
+                            })}
+                        >
+                            <div class="sidebarData" onClick={() => handlefilechange()}>
+                                동기화
+                            </div>
+
+                        </li>
 
                         <li
                             className={cn({
@@ -669,10 +738,23 @@ const Room = (props) => {
                                 ["open-item"]: chatroom
                             })}
                         >
-                            <a href="#">채팅</a>
+                            <div class="sidebarData">
+                                채팅
+                            </div>
                         </li>
 
                         {chatelement}
+
+                        <li
+                            className={cn({
+                                ["open-item"]: chatroom
+                            })}
+                        >
+                            <div class="sidebarData" onClick={() => handlefilechange()}>
+                                동기화
+                            </div>
+
+                        </li>
 
                         <li
                             className={cn({
@@ -699,10 +781,23 @@ const Room = (props) => {
                                 ["open-item"]: extra
                             })}
                         >
-                            <a href="#">기타</a>
+                            <div class="sidebarData">
+                                기타
+                            </div>
                         </li>
 
                         {userExtListelement}
+
+                        <li
+                            className={cn({
+                                ["open-item"]: chatroom
+                            })}
+                        >
+                            <div class="sidebarData" onClick={() => handlefilechange()}>
+                                동기화
+                            </div>
+
+                        </li>
 
                         <li
                             className={cn({
@@ -788,7 +883,7 @@ const Room = (props) => {
                                 ["open-item"]: addLink
                             })}
                         >
-                            <div class="sidebarData" onClick={() => addItem()}>
+                            <div class="sidebarData" onClick={() => addItem(handlefilechange)}>
                                 저장하기
                             </div>
                         </li>
@@ -813,16 +908,22 @@ const Room = (props) => {
 
             <div>
                 <div className='area1'>
-                    {/* <iframe width={leftwidth} height="1000px" src={urllist[0]} title='test' name="test" id="test" scrolling="yes" align="left" style={{visibility: 'visible'}}>이 브라우저는 iframe을 지원하지 않습니다</iframe> */}
-                    <Container style={{ width: leftwidth, height: "1000px", position: 'absolute' }}>
-                        <Col>
-                            <StyledVideo muted ref={userVideo} autoPlay playsInline />
-                            <Row>
-                                <button onClick={shareScreen}>Share screen</button>
-                                <button onClick={HideCam}>{camText}</button>
-                                <button onClick={MuteAudio}>{muteText}</button>
-                            </Row>
-                        </Col>
+                    <iframe width={leftwidth} height="1000px" src={urllist[0]} title='test' name="test" id="test" scrolling="yes" align="left" style={{ display: show[0][0] }}>이 브라우저는 iframe을 지원하지 않습니다</iframe>
+                    <Container style={{ width: (leftwidth), height: "1000px", position: 'absolute', display:show[0][1]}}>
+                        {peers.map((peer) => {
+                            
+                            console.log('section 1')
+                            console.log(peer.peerNick)
+                            console.log(peerCameraList[0])
+                            console.log((peer.peerNick == peerCameraList[0]))
+                            if((peer.peerNick == peerCameraList[0])) {
+                                return (
+                                    <div>
+                                        <Video key={peer.peerID} peer={peer.peer} />
+                                    </div>
+                                );
+                            }
+                        })}
                     </Container>
 
                     {/* <Section1/> */}
@@ -836,31 +937,36 @@ const Room = (props) => {
 
             <div>
                 <div className="vl4" style={{ marginLeft: vlConstraint2 - 5, height: heightValue, opacity: opacityValue[2] ? 1 : 0.5, cursor: 'e-resize' }} >
-                    {/* <iframe width={vlConstraint[1][0] - vlConstraint2} height={heightValue} src={urllist[1]} title='test' name="test" id="test" scrolling="yes" align="left">이 브라우저는 iframe을 지원하지 않습니다</iframe> */}
+                    <iframe width={vlConstraint[1][0] - vlConstraint2 + 5} height={heightValue} src={urllist[1]} title='test' name="test" id="test" scrolling="yes" align="left" style={{ display: show[1][0] }}>이 브라우저는 iframe을 지원하지 않습니다</iframe>
                     {/* <img id='img1' width={ vlConstraint[1][0]-vlConstraint2 +5 } height={ heightValue } src = 'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQ7IB6Ai52BgQezn9Uid6XYFst6BARdp6mev-94mVHucrbD5FfV' alt=''></img> */}
-                    <Container style={{ width: (vlConstraint[1][0] - vlConstraint2), height: heightValue }}>
-                        {/* <Col>
+                    <Container style={{ width: (vlConstraint[1][0] - vlConstraint2 + 5), height: heightValue, position: 'absolute', display:  show[1][1] }}>
+                        <Col>
                             <StyledVideo muted ref={userVideo} autoPlay playsInline />
                             <Row>
                                 <button onClick={shareScreen}>Share screen</button>
                                 <button onClick={HideCam}>{camText}</button>
                                 <button onClick={MuteAudio}>{muteText}</button>
                             </Row>
-                        </Col> */}
-                        {peers.map((peer) => {
-                            return (
-                                <div>
-                                    <text>{peer.peerNick}</text>
-                                    <Video key={peer.peerID} peer={peer.peer} />
-                                </div>
-                            );
-                        })}
+                        </Col>
                     </Container>
 
 
                 </div>
                 <div className="vl4" style={{ marginLeft: vlConstraint2 - 5, marginTop: heightValue + 5, height: (1000 - heightValue), opacity: opacityValue[2] ? 1 : 0.5, cursor: 'e-resize' }} >
-                    {/* <iframe width={vlConstraint[1][1] - vlConstraint2 + 5} height={(1000 - heightValue - 5)} src={urllist[3]} title='test' name="test" id="test" scrolling="yes" align="left">이 브라우저는 iframe을 지원하지 않습니다</iframe> */}
+                <iframe width={vlConstraint[1][1] - vlConstraint2 + 5} height={(1000 - heightValue - 5)} src={urllist[3]} title='test' name="test" id="test" scrolling="yes" align="left" style={{ display: show[3][0] }}>이 브라우저는 iframe을 지원하지 않습니다</iframe>
+                <Container style={{ width: (vlConstraint[1][1] - vlConstraint2 + 5), height: (1000 - heightValue - 5), position: 'absolute', display:show[3][1]}}>
+                        {peers.map((peer) => {
+                            console.log('please')
+                            console.log(peer)
+                            if(peer.peerNick == peerCameraList[3]){
+                                return (
+                                    <div>
+                                        <Video key={peer.peerID} peer={peer.peer} />
+                                    </div>
+                                );
+                            }
+                        })}
+                    </Container>
                     {/* <img id='img1' width={ vlConstraint[1][1]-vlConstraint2 +5 } height={ (1000-heightValue) } src = 'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQ7IB6Ai52BgQezn9Uid6XYFst6BARdp6mev-94mVHucrbD5FfV' alt=''></img> */}
 
                     {/* <Container style={{ width: (vlConstraint[1][1] - vlConstraint2 + 5), height: (1000 - heightValue - 5) }}>
@@ -879,16 +985,56 @@ const Room = (props) => {
                         })}
 
                     </Container> */}
+                    <Container style={{ width: (vlConstraint[1][1] - vlConstraint2 + 5), height: (1000 - heightValue - 5), position: 'absolute', display:show[3][1]}}>
+                        {peers.map((peer) => {
+                            console.log('please')
+                            console.log(peer)
+                            if(peer.peerNick == peerCameraList[3]){
+                                return (
+                                    <div>
+                                        <Video key={peer.peerID} peer={peer.peer} />
+                                    </div>
+                                );
+                            }
+                        })}
+                    </Container>                
                 </div>
                 <Draggable bounds={{ left: -(1400 - vlConstraint2) }} axis='x' onStop={(e, data) => trackPos3(e, data)} onDrag={(e, data) => handleGrab3(data)} >
                     <div className="vl2" style={{ marginLeft: 1400, height: heightValue, opacity: opacityValue[2] ? 1 : 0.5, cursor: 'e-resize' }} >
-                        {/* <iframe width={1900 - vlConstraint[1][0]} height={heightValue} src={urllist[2]} title='test' name="test" id="test" scrolling="yes" align="left">이 브라우저는 iframe을 지원하지 않습니다</iframe> */}
+                    <iframe width={1900 - vlConstraint[1][0]} height={heightValue} src={urllist[2]} title='test' name="test" id="test" scrolling="yes" align="left" style={{ display: show[2][0] }}>이 브라우저는 iframe을 지원하지 않습니다</iframe>
+                        
+                    <Container style={{ width: (1900 - vlConstraint[1][0]), height: (heightValue), position: 'absolute', display:show[2][1]}}>
+                        {peers.map((peer) => {
+                            console.log('please')
+                            console.log(peer)
+                            if(peer.peerNick == peerCameraList[2]){
+                                return (
+                                    <div>
+                                        <Video key={peer.peerID} peer={peer.peer} />
+                                    </div>
+                                );
+                            }
+                        })}
+                    </Container>
                         {/* <img id='img1'  width={ 1900-vlConstraint[1][0] } height={ heightValue } src = 'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQ7IB6Ai52BgQezn9Uid6XYFst6BARdp6mev-94mVHucrbD5FfV' alt=''></img> */}
                     </div>
                 </Draggable>
                 <Draggable bounds={{ left: -(1405 - vlConstraint2) }} axis='x' onStop={(e, data) => trackPos4(e, data)} onDrag={(e, data) => handleGrab4(e, data)} >
                     <div className="vl3" style={{ marginLeft: 1400, marginTop: (heightValue + 5), height: (1000 - heightValue - 5), opacity: opacityValue[3] ? 1 : 0.5, cursor: 'e-resize' }} >
-                        {/* <iframe width={1900 - vlConstraint[1][1]} height={(1000 - heightValue - 5)} src={urllist[4]} title='test' name="test" id="test" scrolling="yes" align="left">이 브라우저는 iframe을 지원하지 않습니다</iframe> */}
+                    <iframe width={1900 - vlConstraint[1][1]} height={(1000 - heightValue - 5)} src={urllist[4]} title='test' name="test" id="test" scrolling="yes" align="left" style={{ display: show[4][0] }}>이 브라우저는 iframe을 지원하지 않습니다</iframe>
+                    <Container style={{ width: (1900 - vlConstraint[1][1]), height: (1000 - heightValue - 5), position: 'absolute', display:show[4][1]}}>
+                        {peers.map((peer) => {
+                            console.log('please')
+                            console.log(peer)
+                            if(peer.peerNick == peerCameraList[4]){
+                                return (
+                                    <div>
+                                        <Video key={peer.peerID} peer={peer.peer} />
+                                    </div>
+                                );
+                            }
+                        })}
+                    </Container>
                         {/* <img id='img1' width={ 1900-vlConstraint[1][1] } height={ (1000-heightValue) } src = 'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQ7IB6Ai52BgQezn9Uid6XYFst6BARdp6mev-94mVHucrbD5FfV' alt=''></img> */}
                     </div>
                 </Draggable>
