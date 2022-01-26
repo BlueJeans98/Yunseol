@@ -49,7 +49,7 @@ const CreateRoom = (props) => {
     // });
   
     let [exOneBtn, exOneBtnC] = useState({
-      margin: "30px 0px 0px 0px",
+      margin: "30px 20px 0px 0px",
     });
     let [exOneMoreBtn, exOneMoreBtnC] = useState({
       margin: "200px 0px 0px 20px",
@@ -294,9 +294,9 @@ const CreateRoom = (props) => {
             </p>
             <a
               className="custom-btn btn-11"
-              href="."
               role="button"
               style={exOneBtn}
+              onClick={create}
             >
               Create<div className="dot"></div>
             </a>
@@ -355,14 +355,19 @@ const CreateRoom = (props) => {
                 있습니다. 지금 바로 여기서 함께 나아가 봅시다.
               </strong>
             </p>
-            <a
-              className="custom-btn btn-11"
-              href="."
-              role="button"
-              style={exOneBtn}
-            >
-              Go Join<div className="dot"></div>
-            </a>
+            {rooms.map((room) => {
+                return (
+                  <a
+                  className="custom-btn btn-11"
+                  role="button"
+                  style={exOneBtn}
+                  onClick={() => handleClickOpen(room)}
+                  >
+                     {room}<div className="dot"></div>
+                 </a>
+                    );
+            })}
+             
           </div>
         </Bounce>
         <Bounce left opposite cascade when={!exOneShow}>
@@ -374,19 +379,6 @@ const CreateRoom = (props) => {
           </div>
         </Bounce>
       </div>
-      <div className="rooms">
-            <Button variant="outlined" 
-            color= "default" onClick={create}>
-                Create room
-            </Button>
-            {rooms.map((room) => {
-                return (
-                    <Button variant="outlined" 
-                        color="primary" onClick={() => handleClickOpen(room)}>
-                        {room}
-                    </Button>
-                    );
-            })}
             <Dialog open={open} onClose={handleClose}>
                 <DialogTitle>
                 방 참가시 닉네임을 정해주세요.
@@ -401,7 +393,6 @@ const CreateRoom = (props) => {
                     </Button>
                 </DialogActions>
             </Dialog>
-            </div>
             </div>
         </div>
     );

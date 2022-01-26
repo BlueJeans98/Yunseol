@@ -916,7 +916,7 @@ const Room = (props) => {
                             console.log(peer.peerNick)
                             console.log(peerCameraList[0])
                             console.log((peer.peerNick == peerCameraList[0]))
-                            if((peer.peerNick == peerCameraList[0])) {
+                            if((peer.peerNick == '김수민')) {
                                 return (
                                     <div>
                                         <Video key={peer.peerID} peer={peer.peer} />
@@ -958,7 +958,7 @@ const Room = (props) => {
                         {peers.map((peer) => {
                             console.log('please')
                             console.log(peer)
-                            if(peer.peerNick == peerCameraList[3]){
+                            if(peer.peerNick == '김수민'){
                                 return (
                                     <div>
                                         <Video key={peer.peerID} peer={peer.peer} />
@@ -989,7 +989,7 @@ const Room = (props) => {
                         {peers.map((peer) => {
                             console.log('please')
                             console.log(peer)
-                            if(peer.peerNick == peerCameraList[3]){
+                            if(peer.peerNick == '김수민'){
                                 return (
                                     <div>
                                         <Video key={peer.peerID} peer={peer.peer} />
@@ -1007,7 +1007,7 @@ const Room = (props) => {
                         {peers.map((peer) => {
                             console.log('please')
                             console.log(peer)
-                            if(peer.peerNick == peerCameraList[2]){
+                            if(peer.peerNick == '김수민'){
                                 return (
                                     <div>
                                         <Video key={peer.peerID} peer={peer.peer} />
@@ -1026,7 +1026,7 @@ const Room = (props) => {
                         {peers.map((peer) => {
                             console.log('please')
                             console.log(peer)
-                            if(peer.peerNick == peerCameraList[4]){
+                            if(peer.peerNick == '김수민'){
                                 return (
                                     <div>
                                         <Video key={peer.peerID} peer={peer.peer} />
