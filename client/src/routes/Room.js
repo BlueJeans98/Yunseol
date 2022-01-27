@@ -654,8 +654,9 @@ const Room = (props) => {
                                 ["open-item"]: peoplelist
                             })}
                         >
-                            <div class="sidebarData">
+                            <div class="sidebarData2">
                                 참가자
+                                <hr className="menu"></hr>
                             </div>
                         </li>
 
@@ -694,8 +695,9 @@ const Room = (props) => {
                                 ["open-item"]: sharedDoc
                             })}
                         >
-                            <div class="sidebarData">
+                            <div class="sidebarData2">
                                 공유 문서함
+                                <hr className="menu"></hr>
                             </div>
                         </li>
 
@@ -703,7 +705,7 @@ const Room = (props) => {
 
                         <li
                             className={cn({
-                                ["open-item"]: chatroom
+                                ["open-item"]: sharedDoc
                             })}
                         >
                             <div class="sidebarData" onClick={() => handlefilechange()}>
@@ -738,8 +740,9 @@ const Room = (props) => {
                                 ["open-item"]: chatroom
                             })}
                         >
-                            <div class="sidebarData">
+                            <div class="sidebarData2">
                                 채팅
+                                <hr className="menu"></hr>
                             </div>
                         </li>
 
@@ -781,8 +784,9 @@ const Room = (props) => {
                                 ["open-item"]: extra
                             })}
                         >
-                            <div class="sidebarData">
+                            <div class="sidebarData2">
                                 기타
+                                <hr className="menu"></hr>
                             </div>
                         </li>
 
@@ -790,7 +794,7 @@ const Room = (props) => {
 
                         <li
                             className={cn({
-                                ["open-item"]: chatroom
+                                ["open-item"]: extra
                             })}
                         >
                             <div class="sidebarData" onClick={() => handlefilechange()}>
@@ -823,7 +827,7 @@ const Room = (props) => {
                             })}
                         >
 
-                            <div class="sidebarData" onClick={() => setextra(!extra)}>
+                            <div class="sidebarData3" onClick={() => setextra(!extra)}>
                                 추가
                             </div>
                         </li>
@@ -856,13 +860,13 @@ const Room = (props) => {
                             <div className='dd-header2'>
                                 <textarea name="mb_self" rows="5" cols="35" onChange={onContentChangeTitle}></textarea>
                             </div>
-                            <div class="sidebarData" onClick={() => setaddLink(!addLink)}>
+                            <div class="sidebarData4" onClick={() => setaddLink(!addLink)}>
                                 제목
                             </div>
                             <div className='dd-header2'>
                                 <textarea name="mb_self" rows="5" cols="35" onChange={onContentChangeUrl}></textarea>
                             </div>
-                            <div class="sidebarData" onClick={() => setaddLink(!addLink)}>
+                            <div class="sidebarData4" onClick={() => setaddLink(!addLink)}>
                                 링크
                             </div>
 

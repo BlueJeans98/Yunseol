@@ -200,7 +200,7 @@
 
 body {
   margin: 0;
-  overflow-y: hidden;
+  /* overflow-y: hidden; */
 }
 .Apps {
   height: 100vh;

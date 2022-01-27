@@ -11,6 +11,14 @@
   overflow: hidden;
 }
 
+.dd-header {
+  margin-top: 40px !important;
+}
+
+.dd-wrapper {
+  margin-left: 28px !important;
+}
+
 nav {
   position: relative;
   height: 50px;

@@ -18,7 +18,8 @@
   }
   
   a {
-    text-decoration:none !important
+    text-decoration:none !important;
+    white-space: nowrap;
   }
   a:link {
     color : white;
@@ -37,8 +38,32 @@
     color: #ffffff;
     letter-spacing: 3px;
     background-color: #1c2022;
+    cursor: pointer;
+  }
+
+  .sidebarData2{
+    color: #ffffff;
+    letter-spacing: 3px;
+    background-color: #1c2022;
+    font-size: 20px;
+    cursor: pointer;
+
+  }
+
+  .sidebarData3{
+    color: #ffffff;
+    letter-spacing: 3px;
+    background-color: #1c2022;
+    font-size: 30px;
   }
   
+  .sidebarData4{
+    color: #ffffff;
+    letter-spacing: 3px;
+    background-color: #1c2022;
+    font-size: 20px;
+  }
+
   .offcanvas-end {
     top: 0;
     right: 0;
@@ -107,6 +132,13 @@
     opacity: 0.5;
     margin-top: 500px;
     z-index: 100;
+  }
+
+  .menu{
+    background-color: rgb(255, 255, 255) !important;
+    margin-top: 32px;
+    opacity: 0.9;
+    border: solid 1px;
   }
   
   .box {
